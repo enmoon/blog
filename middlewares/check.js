@@ -1,19 +1,18 @@
+module.exports = {
 
-module.exports ={
-  
-  checkNotLogin: (ctx) => {
-    if (ctx.session && ctx.session.user) {     
-      ctx.redirect('/posts');
-      return false;
-    }
-    return true;
-  },
+    checkNotLogin: (ctx) => {
+        if (ctx.session && ctx.session.user) {
+            ctx.redirect('/posts');
+            return false;
+        }
+        return true;
+    },
 
-  checkLogin: (ctx) => {
-    if (!ctx.session || !ctx.session.user) {     
-      ctx.redirect('/signin');
-      return false;
+    checkLogin: (ctx) => {
+        if (!ctx.session || !ctx.session.user) {
+            ctx.redirect('/signin');
+            return false;
+        }
+        return true;
     }
-    return true;
-  }
 }

@@ -3,13 +3,13 @@ const userModel = require('../lib/mysql.js')
 const moment = require('moment')
 const checkNotLogin = require('../middlewares/check.js').checkNotLogin
 const checkLogin = require('../middlewares/check.js').checkLogin;
-const md = require('markdown-it')();  
+const md = require('markdown-it')();
 // 重置到文章页
-router.get('/', async(ctx, next) => {
+router.get('/', async (ctx, next) => {
     ctx.redirect('/posts')
 })
 // 文章页
-router.get('/posts', async(ctx, next) => {
+router.get('/posts', async (ctx, next) => {
     let res,
         postsLength,
         name = decodeURIComponent(ctx.request.querystring.split('=')[1]);
@@ -19,14 +19,14 @@ router.get('/posts', async(ctx, next) => {
             .then(result => {
                 postsLength = result.length
             })
-        await userModel.findPostByUserPage(name,1)
+        await userModel.findPostByUserPage(name, 1)
             .then(result => {
                 res = result
             })
         await ctx.render('selfPosts', {
             session: ctx.session,
             posts: res,
-            postsPageLength:Math.ceil(postsLength / 10),
+            postsPageLength: Math.ceil(postsLength / 10),
         })
     } else {
         await userModel.findPostByPage(1)
@@ -35,57 +35,57 @@ router.get('/posts', async(ctx, next) => {
                 res = result
             })
         await userModel.findAllPost()
-            .then(result=>{
+            .then(result => {
                 postsLength = result.length
-            })    
+            })
         await ctx.render('posts', {
             session: ctx.session,
             posts: res,
             postsLength: postsLength,
             postsPageLength: Math.ceil(postsLength / 10),
-            
+
         })
     }
 })
 
 // 首页分页，每次输出10条
-router.post('/posts/page', async(ctx, next) => {
+router.post('/posts/page', async (ctx, next) => {
     let page = ctx.request.body.page;
     await userModel.findPostByPage(page)
-            .then(result=>{
-                //console.log(result)
-                ctx.body = result   
-            }).catch(()=>{
+        .then(result => {
+            //console.log(result)
+            ctx.body = result
+        }).catch(() => {
             ctx.body = 'error'
-        })  
+        })
 })
 // 个人文章分页，每次输出10条
-router.post('/posts/self/page', async(ctx, next) => {
+router.post('/posts/self/page', async (ctx, next) => {
     let data = ctx.request.body
-    await userModel.findPostByUserPage(data.name,data.page)
-            .then(result=>{
-                //console.log(result)
-                ctx.body = result   
-            }).catch(()=>{
+    await userModel.findPostByUserPage(data.name, data.page)
+        .then(result => {
+            //console.log(result)
+            ctx.body = result
+        }).catch(() => {
             ctx.body = 'error'
-        })  
+        })
 })
 // 单篇文章页
-router.get('/posts/:postId', async(ctx, next) => {
+router.get('/posts/:postId', async (ctx, next) => {
     let comment_res,
         res,
         pageOne,
-        res_pv; 
+        res_pv;
     await userModel.findDataById(ctx.params.postId)
         .then(result => {
             //console.log(result )
             res = result
             res_pv = parseInt(result[0]['pv'])
             res_pv += 1
-           // console.log(res_pv)
+            // console.log(res_pv)
         })
     await userModel.updatePostPv([res_pv, ctx.params.postId])
-    await userModel.findCommentByPage(1,ctx.params.postId)
+    await userModel.findCommentByPage(1, ctx.params.postId)
         .then(result => {
             pageOne = result
             //console.log('comment', comment_res)
@@ -99,21 +99,21 @@ router.get('/posts/:postId', async(ctx, next) => {
         session: ctx.session,
         posts: res[0],
         commentLenght: comment_res.length,
-        commentPageLenght: Math.ceil(comment_res.length/10),
-        pageOne:pageOne
+        commentPageLenght: Math.ceil(comment_res.length / 10),
+        pageOne: pageOne
     })
 
 })
 
 // 发表文章页面
-router.get('/create', async(ctx, next) => {
+router.get('/create', async (ctx, next) => {
     await ctx.render('create', {
         session: ctx.session,
     })
 })
 
 // post 发表文章
-router.post('/create', async(ctx, next) => {
+router.post('/create', async (ctx, next) => {
     let title = ctx.request.body.title,
         content = ctx.request.body.content,
         id = ctx.session.id,
@@ -121,7 +121,7 @@ router.post('/create', async(ctx, next) => {
         time = moment().format('YYYY-MM-DD HH:mm:ss'),
         avator,
         // 现在使用markdown不需要单独转义
-        newContent = content.replace(/[<">']/g, (target) => { 
+        newContent = content.replace(/[<">']/g, (target) => {
             return {
                 '<': '&lt;',
                 '"': '&quot;',
@@ -142,19 +142,19 @@ router.post('/create', async(ctx, next) => {
     await userModel.findUserData(ctx.session.user)
         .then(res => {
             console.log(res[0]['avator'])
-            avator = res[0]['avator']       
+            avator = res[0]['avator']
         })
-    await userModel.insertPost([name, newTitle, md.render(content), content, id, time,avator])
-            .then(() => {
-                ctx.body = true
-            }).catch(() => {
-                ctx.body = false
-            })
+    await userModel.insertPost([name, newTitle, md.render(content), content, id, time, avator])
+        .then(() => {
+            ctx.body = true
+        }).catch(() => {
+            ctx.body = false
+        })
 
 })
 
 // 发表评论
-router.post('/:postId', async(ctx, next) => {
+router.post('/:postId', async (ctx, next) => {
     let name = ctx.session.user,
         content = ctx.request.body.content,
         postId = ctx.params.postId,
@@ -165,8 +165,8 @@ router.post('/:postId', async(ctx, next) => {
         .then(res => {
             console.log(res[0]['avator'])
             avator = res[0]['avator']
-        })   
-    await userModel.insertComment([name, md.render(content),time, postId,avator])
+        })
+    await userModel.insertComment([name, md.render(content), time, postId, avator])
     await userModel.findDataById(postId)
         .then(result => {
             res_comments = parseInt(result[0]['comments'])
@@ -181,7 +181,7 @@ router.post('/:postId', async(ctx, next) => {
 })
 
 // 编辑单篇文章页面
-router.get('/posts/:postId/edit', async(ctx, next) => {
+router.get('/posts/:postId/edit', async (ctx, next) => {
     let name = ctx.session.user,
         postId = ctx.params.postId,
         res;
@@ -199,12 +199,12 @@ router.get('/posts/:postId/edit', async(ctx, next) => {
 })
 
 // post 编辑单篇文章
-router.post('/posts/:postId/edit', async(ctx, next) => {
+router.post('/posts/:postId/edit', async (ctx, next) => {
     let title = ctx.request.body.title,
         content = ctx.request.body.content,
         id = ctx.session.id,
         postId = ctx.params.postId,
-         // 现在使用markdown不需要单独转义
+        // 现在使用markdown不需要单独转义
         newTitle = title.replace(/[<">']/g, (target) => {
             return {
                 '<': '&lt;',
@@ -230,7 +230,7 @@ router.post('/posts/:postId/edit', async(ctx, next) => {
 })
 
 // 删除单篇文章
-router.post('/posts/:postId/remove', async(ctx, next) => {
+router.post('/posts/:postId/remove', async (ctx, next) => {
     let postId = ctx.params.postId
     await userModel.deleteAllPostComment(postId)
     await userModel.deletePost(postId)
@@ -245,7 +245,7 @@ router.post('/posts/:postId/remove', async(ctx, next) => {
         })
 })
 // 删除评论
-router.post('/posts/:postId/comment/:commentId/remove', async(ctx, next) => {
+router.post('/posts/:postId/comment/:commentId/remove', async (ctx, next) => {
     let postId = ctx.params.postId,
         commentId = ctx.params.commentId,
         res_comments;
@@ -270,15 +270,15 @@ router.post('/posts/:postId/comment/:commentId/remove', async(ctx, next) => {
         })
 })
 // 评论分页
-router.post('/posts/:postId/commentPage', async function(ctx){
+router.post('/posts/:postId/commentPage', async function (ctx) {
     let postId = ctx.params.postId,
         page = ctx.request.body.page;
-    await userModel.findCommentByPage(page,postId)
-        .then(res=>{
+    await userModel.findCommentByPage(page, postId)
+        .then(res => {
             ctx.body = res
-        }).catch(()=>{
+        }).catch(() => {
             ctx.body = 'error'
-        })  
+        })
 })
 
 module.exports = router

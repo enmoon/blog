@@ -34,7 +34,7 @@ router.post('/signup', async(ctx, next) => {
                 // 用户存在
                 ctx.body = {
                     data: 1
-                };;
+                };
                 
             } else if (user.pass !== user.repeatpass || user.pass === '') {
                 ctx.body = {
